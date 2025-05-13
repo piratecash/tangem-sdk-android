@@ -15,10 +15,8 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.services.toTangemSdkError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.consumeEach
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
@@ -40,8 +38,8 @@ class AttestationTask(
     private var currentAttestationStatus: Attestation = Attestation.empty
 
     private var onlineAttestationChannel =
-        ConflatedBroadcastChannel<CompletionResult<CardVerifyAndGetInfo.Response.Item>>()
-    private var onlineAttestationSubscription: ReceiveChannel<CompletionResult<*>>? = null
+        MutableStateFlow<CompletionResult<CardVerifyAndGetInfo.Response.Item>?>(null)
+    private var onlineAttestationJob: Job? = null
 
     override fun run(session: CardSession, callback: CompletionCallback<Attestation>) {
         session.environment.card.guard {
@@ -107,27 +105,26 @@ class AttestationTask(
             val isDevelopmentCard = card.firmwareVersion.type == FirmwareVersion.FirmwareType.Sdk
             val isAttestationFailed = currentAttestationStatus.cardKeyAttestation == Attestation.Status.Failed
             if (isDevelopmentCard || isAttestationFailed) {
-                onlineAttestationChannel.send(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
+                onlineAttestationChannel.emit(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
                 return@launch
             }
 
             when (val result = onlineCardVerifier.getCardInfo(card.cardId, card.cardPublicKey)) {
-                is Result.Success -> onlineAttestationChannel.send(CompletionResult.Success(result.data))
-                is Result.Failure -> onlineAttestationChannel.send(CompletionResult.Failure(result.toTangemSdkError()))
+                is Result.Success -> onlineAttestationChannel.emit(CompletionResult.Success(result.data))
+                is Result.Failure -> onlineAttestationChannel.emit(CompletionResult.Failure(result.toTangemSdkError()))
             }
         }
     }
 
     private fun waitForOnlineAndComplete(session: CardSession, callback: CompletionCallback<Attestation>) {
-        if (onlineAttestationSubscription != null) return
+        if (onlineAttestationJob != null) return
 
         if (!shouldKeepSessionOpened) {
             session.pause()
         }
 
-        session.scope.launch {
-            onlineAttestationSubscription = onlineAttestationChannel.openSubscription()
-            onlineAttestationSubscription?.consumeEach { result ->
+        onlineAttestationJob = session.scope.launch {
+            onlineAttestationChannel.collect { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         // We assume, that card verified, because we skip online attestation for dev cards and cards that failed keys attestation
@@ -145,6 +142,9 @@ class AttestationTask(
                             )
                         }
                         processAttestationReport(session, callback)
+                    }
+                    null -> {
+                        // Ignore
                     }
                 }
             }
@@ -199,9 +199,11 @@ class AttestationTask(
     }
 
     private fun retryOnline(session: CardSession, callback: CompletionCallback<Attestation>) {
-        onlineAttestationSubscription = null
-        onlineAttestationChannel.cancel()
-        onlineAttestationChannel = ConflatedBroadcastChannel()
+        onlineAttestationJob?.let {
+            it.cancel()
+            onlineAttestationJob = null
+        }
+        onlineAttestationChannel = MutableStateFlow<CompletionResult<CardVerifyAndGetInfo.Response.Item>?>(null)
 
         val card = session.environment.card.guard {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
@@ -288,8 +290,10 @@ class AttestationTask(
         session.environment.card = session.environment.card?.copy(attestation = currentAttestationStatus)
         callback(CompletionResult.Success(currentAttestationStatus))
 
-        onlineAttestationChannel.cancel()
-        onlineAttestationSubscription = null
+        onlineAttestationJob?.let {
+            it.cancel()
+            onlineAttestationJob = null
+        }
     }
 
     enum class Mode {

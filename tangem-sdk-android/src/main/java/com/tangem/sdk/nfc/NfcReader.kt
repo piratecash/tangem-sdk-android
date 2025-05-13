@@ -15,8 +15,9 @@ import com.tangem.common.nfc.CardReader
 import com.tangem.common.nfc.ReadingActiveListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
@@ -30,7 +31,10 @@ data class NfcTag(val type: TagType, val isoDep: IsoDep?, val nfcV: NfcV? = null
  * Provides NFC communication between an Android application and Tangem card.
  */
 class NfcReader : CardReader {
-    override val tag = ConflatedBroadcastChannel<TagType?>()
+    override val tag = MutableSharedFlow<TagType?>(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
     override var scope: CoroutineScope? = null
 
     var listener: ReadingActiveListener? = null
@@ -40,7 +44,7 @@ class NfcReader : CardReader {
         set(value) {
             field = value
             Log.nfc { "received tag: ${value?.type?.name?.uppercase()}" }
-            scope?.launchWithLock(readerMutex) { tag.send(value?.type) }
+            scope?.launchWithLock(readerMutex) { tag.emit(value?.type) }
         }
 
     override fun startSession() {

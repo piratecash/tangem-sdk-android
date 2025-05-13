@@ -1,7 +1,9 @@
 package com.tangem.demo.ui.tasksLogger
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.AdapterView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -30,8 +32,7 @@ import com.tangem.operations.files.FileVisibility
 import com.tangem.operations.resetcode.ResetCodesViewDelegate
 import com.tangem.operations.resetcode.ResetCodesViewState
 import com.tangem.sdk.nfc.NfcManager
-import com.tangem.tangem_demo.R
-import kotlinx.android.synthetic.main.fg_commands_tester.*
+import com.tangem.tangem_demo.databinding.FgCommandsTesterBinding
 
 /**
  * Created by Anton Zhilenkov on 23/12/2020.
@@ -50,7 +51,13 @@ class SdkTaskSpinnerFragment : BaseFragment() {
         handleCommandSelection(commandState.selectedType)
     }
 
-    override fun getLayoutId(): Int = R.layout.fg_commands_tester
+    private var _binding: FgCommandsTesterBinding? = null
+    private val binding get() = _binding!!
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        _binding = FgCommandsTesterBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -68,36 +75,36 @@ class SdkTaskSpinnerFragment : BaseFragment() {
         }
         initSpinner()
         initRecycler()
-        btnClearConsole.setOnClickListener { rvConsoleAdapter.clear() }
+        binding.btnClearConsole.setOnClickListener { rvConsoleAdapter.clear() }
     }
 
     private fun initSpinner() {
-        spCommandSelector.adapter = CommandSpinnerAdapter(CommandType.values().toList())
+        binding.spCommandSelector.adapter = CommandSpinnerAdapter(CommandType.values().toList())
         nfcManager.addTagDiscoveredListener(tagDiscoveredListener)
         postBackground {
-            spCommandSelector.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            binding.spCommandSelector.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                     // close the session from a previous command
                     if (commandState.isActive) nfcManager.reader.stopSession(true)
 
                     commandState.reset()
-                    btnClearConsole.performClick()
+                    binding.btnClearConsole.performClick()
                     handleCommandSelection(CommandType.values()[position])
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) {
                 }
             }
-            spCommandSelector.setSelection(commandState.selectedType.ordinal, false)
+            binding.spCommandSelector.setSelection(commandState.selectedType.ordinal, false)
         }
     }
 
     private fun initRecycler() {
         val linearLayoutManager = LinearLayoutManager(requireContext())
 
-        rvConsole.layoutManager = linearLayoutManager
-        rvConsole.adapter = rvConsoleAdapter
-        rvConsole.addOnScrollListener(
+        binding.rvConsole.layoutManager = linearLayoutManager
+        binding.rvConsole.adapter = rvConsoleAdapter
+        binding.rvConsole.addOnScrollListener(
             object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
@@ -106,8 +113,13 @@ class SdkTaskSpinnerFragment : BaseFragment() {
             },
         )
         rvConsoleAdapter.onItemCountChanged = {
-            rvConsole.smoothScrollToPosition(it)
+            binding.rvConsole.smoothScrollToPosition(it)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     @Suppress("ComplexMethod")

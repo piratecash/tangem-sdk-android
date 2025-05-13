@@ -38,13 +38,11 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
@@ -90,6 +88,7 @@ class CardSession(
         private set
 
     private var resetCodesController: ResetCodesController? = null
+    private var subscriptionJob: Job? = null
 
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO) + CoroutineExceptionHandler { _, throwable ->
         handleScopeCoroutineException(throwable)
@@ -179,7 +178,7 @@ class CardSession(
         )
 
         scope.launch {
-            reader.tag.asFlow()
+            reader.tag
                 .filterNotNull()
                 .take(1)
                 .collect { tagType ->
@@ -199,7 +198,7 @@ class CardSession(
         }
 
         scope.launch {
-            reader.tag.asFlow()
+            reader.tag
                 .drop(1)
                 .collect {
                     if (it == null) {
@@ -213,7 +212,7 @@ class CardSession(
         }
 
         scope.launch {
-            reader.tag.asFlow()
+            reader.tag
                 .onCompletion {
                     val exception = it as? CancellationException ?: return@onCompletion
                     val cause = exception.cause ?: return@onCompletion
@@ -397,9 +396,9 @@ class CardSession(
 
     fun send(apdu: CommandApdu, callback: CompletionCallback<ResponseApdu>) {
         Log.session { "send CommandApdu" }
-        val subscription = reader.tag.openSubscription()
-        scope.launch {
-            subscription.consumeAsFlow()
+        subscriptionJob?.cancel()
+        subscriptionJob = scope.launch {
+            reader.tag
                 .filterNotNull()
                 .map { establishEncryptionIfNeeded() }
                 .map { apdu.encrypt(environment.encryptionMode, environment.encryptionKey) }
@@ -414,7 +413,10 @@ class CardSession(
                 .collect { result ->
                     when (result) {
                         is CompletionResult.Success -> {
-                            subscription.cancel()
+                            subscriptionJob?.let {
+                                it.cancel()
+                                subscriptionJob = null
+                            }
                             callback(result)
                         }
                         is CompletionResult.Failure -> {
@@ -422,7 +424,10 @@ class CardSession(
                                 is TangemSdkError.TagLost -> Log.session { "tag lost. Waiting for tag..." }
                                 else -> {
                                     Log.error { "${result.error}" }
-                                    subscription.cancel()
+                                    subscriptionJob?.let {
+                                        it.cancel()
+                                        subscriptionJob = null
+                                    }
                                     callback(result)
                                 }
                             }

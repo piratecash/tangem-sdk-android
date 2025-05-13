@@ -4,6 +4,29 @@ apply plugin: 'maven-publish'
 afterEvaluate {
     publishing {
         publications {
+            release(MavenPublication) {
+                if (artifactId == "android") {
+                    from components.release
+
+                    pom.withXml {
+                        Node pomNode = asNode()
+                        pomNode.dependencies.'*'.findAll() {
+                            it.groupId.text() == artifactConfig.group
+                        }.each() { it.parent().remove(it) }
+
+                        pomNode.dependencies.'*'.findAll() {
+                            it.scope.text() == 'runtime'
+                        }.each { it.scope*.value = 'compile' }
+                    }
+                } else if (artifactId == "core") {
+                    from components.java
+                }
+            }
+        }
+    }
+/*
+    publishing {
+        publications {
             maven(MavenPublication) {
                 groupId = "$artifactConfig.group"
                 artifactId = "$project.artifactId"
@@ -11,7 +34,7 @@ afterEvaluate {
 
                 if (artifactId == "android") {
                     from components.release
-                    artifact(sourceJar)
+                    // artifact(sourceJar)
 
                     pom.withXml {
                         Node pomNode = asNode()
@@ -39,4 +62,5 @@ afterEvaluate {
             }
         }
     }
+*/
 }

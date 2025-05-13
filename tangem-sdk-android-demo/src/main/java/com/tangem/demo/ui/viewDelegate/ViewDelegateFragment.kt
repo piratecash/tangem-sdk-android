@@ -1,15 +1,16 @@
 package com.tangem.demo.ui.viewDelegate
 
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import com.tangem.Log
 import com.tangem.SessionViewDelegate
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.demo.DemoActivity
 import com.tangem.demo.ui.BaseFragment
-import com.tangem.tangem_demo.R
-import kotlinx.android.synthetic.main.fg_view_delegate.*
+import com.tangem.tangem_demo.databinding.FgViewDelegateBinding
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,12 +37,23 @@ class ViewDelegateFragment : BaseFragment() {
     private val coroutineContext: CoroutineContext = parentJob + Dispatchers.IO + exceptionHandler
     private val scope = CoroutineScope(coroutineContext)
 
-    override fun getLayoutId(): Int = R.layout.fg_view_delegate
+    private var _binding: FgViewDelegateBinding? = null
+    private val binding get() = _binding!!
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        _binding = FgViewDelegateBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         delegate = (requireActivity() as DemoActivity).viewDelegate
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -66,7 +78,7 @@ class ViewDelegateFragment : BaseFragment() {
         )
 
         actionsList.forEach {
-            it.inflateViews(actions_container)
+            it.inflateViews(binding.actionsContainer)
             it.init(delegate, scope)
         }
     }

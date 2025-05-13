@@ -4,12 +4,13 @@ import android.content.Context
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.Log
+import com.tangem.sdk.R
 import com.tangem.sdk.SessionViewDelegateState
 import com.tangem.sdk.ui.widget.StateWidget
-import kotlinx.android.synthetic.main.bottom_sheet_layout.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseSdkDialog(context: Context) : BottomSheetDialog(context) {
@@ -43,8 +44,9 @@ open class BaseSdkDialog(context: Context) : BottomSheetDialog(context) {
 
     protected fun performHapticFeedback() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            llHeader?.isHapticFeedbackEnabled = true
-            llHeader?.performHapticFeedback(
+            val llHeader = findViewById<LinearLayout>(R.id.llHeader)!!
+            llHeader.isHapticFeedbackEnabled = true
+            llHeader.performHapticFeedback(
                 HapticFeedbackConstants.VIRTUAL_KEY,
                 HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING,
             )

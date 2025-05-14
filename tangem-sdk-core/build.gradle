@@ -40,8 +40,8 @@ sqldelight {
     }
 }
 
-sourceCompatibility = "8"
-targetCompatibility = "8"
+sourceCompatibility = "11"
+targetCompatibility = "11"
 
 buildscript {
     ext.dokka_version = '0.10.0'
@@ -58,12 +58,12 @@ repositories {
 }
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 

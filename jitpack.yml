@@ -1,2 +1,5 @@
+jdk:
+  - openjdk11
+
 install:
   - ./gradlew clean :tangem-sdk-android:publishToMavenLocal :tangem-sdk-core:publishToMavenLocal -xtest -xlint

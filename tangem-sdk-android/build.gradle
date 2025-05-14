@@ -3,7 +3,6 @@ apply plugin: 'kotlin-android'
 apply from: '../dependencies.gradle'
 apply from: '../artifactConfig.gradle'
 apply from: '../upload-github.gradle'
-apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 34
@@ -34,10 +33,10 @@ android {
     namespace "com.tangem.sdk"
 }
 
-/*task sourceJar(type: Jar) {
+task sourceJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
-    classifier "sources"
-}*/
+    archiveClassifier.set("sources")
+}
 
 dependencies {
     // internal

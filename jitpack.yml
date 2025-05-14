@@ -1,5 +1,5 @@
 jdk:
-  - openjdk11
+  - openjdk17
 
 install:
-  - ./gradlew clean :tangem-sdk-android:publishToMavenLocal :tangem-sdk-core:publishToMavenLocal -xtest -xlint
+  - ./gradlew clean :tangem-sdk-android:publishToMavenLocal :tangem-sdk-core:publishToMavenLocal -xtest -xlint -Pversion=$GIT_COMMIT

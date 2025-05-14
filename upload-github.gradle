@@ -2,16 +2,16 @@ apply from: '../artifactConfig.gradle'
 apply plugin: 'maven-publish'
 
 afterEvaluate {
+    println "Project1: ${project.name}, artifactId from properties: '${project.artifactId}'"
     publishing {
         publications {
             maven(MavenPublication) {
                 groupId = "$artifactConfig.group"
                 artifactId = "$project.artifactId"
-                version = "$artifactConfig.version".replace("/", "-")
 
                 if (artifactId == "android") {
                     from components.release
-                    artifact(sourceJar)
+                    artifact(tasks.named('sourceJar'))
 
                     pom.withXml {
                         Node pomNode = asNode()

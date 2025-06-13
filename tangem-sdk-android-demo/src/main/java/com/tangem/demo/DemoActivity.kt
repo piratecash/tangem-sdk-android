@@ -28,12 +28,12 @@ import com.tangem.sdk.extensions.initKeystoreManager
 import com.tangem.sdk.extensions.initNfcManager
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.storage.create
-import com.tangem.tangem_demo.R
-import kotlinx.android.synthetic.main.activity_demo.*
+import com.tangem.tangem_demo.databinding.ActivityDemoBinding
 
 class DemoActivity : AppCompatActivity() {
 
     val logger = TangemSdk.createLogger(LogFormat.StairsFormatter())
+    private lateinit var binding: ActivityDemoBinding
 
     lateinit var sdk: TangemSdk
         private set
@@ -50,18 +50,19 @@ class DemoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         sdk = initSdk()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_demo)
+        binding = ActivityDemoBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         Log.addLogger(logger)
-        viewPager.adapter = ViewPagerAdapter(fragmentPages, this)
-        viewPager.registerOnPageChangeCallback(
+        binding.viewPager.adapter = ViewPagerAdapter(fragmentPages, this)
+        binding.viewPager.registerOnPageChangeCallback(
             object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
                     pageChangeListeners.forEach { it.invoke(position) }
                 }
             },
         )
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             tab.text = fragmentPages[position].simpleName.replace("Fragment", "")
         }.attach()
     }
@@ -71,7 +72,7 @@ class DemoActivity : AppCompatActivity() {
     }
 
     fun enableSwipe(enable: Boolean) {
-        viewPager.isUserInputEnabled = enable
+        binding.viewPager.isUserInputEnabled = enable
     }
 
     private fun initSdk(): TangemSdk {

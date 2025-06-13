@@ -6,7 +6,7 @@ import com.tangem.common.apdu.ResponseApdu
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TagType
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.flow.SharedFlow
 
 /**
  * Allows interaction between the phone or any other terminal and Tangem card.
@@ -15,7 +15,7 @@ import kotlinx.coroutines.channels.BroadcastChannel
  */
 interface CardReader {
 
-    val tag: BroadcastChannel<TagType?>
+    val tag: SharedFlow<TagType?>
     var scope: CoroutineScope?
 
     /**

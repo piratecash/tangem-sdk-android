@@ -10,8 +10,7 @@ import com.tangem.demo.postUi
 import com.tangem.operations.backup.BackupService
 import com.tangem.operations.backup.ResetBackupCommand
 import com.tangem.sdk.extensions.init
-import com.tangem.tangem_demo.R
-import kotlinx.android.synthetic.main.activity_backup.*
+import com.tangem.tangem_demo.databinding.ActivityBackupBinding
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +27,7 @@ class BackupActivity : AppCompatActivity() {
 
     lateinit var backupService: BackupService
     lateinit var tangemSdk: TangemSdk
+    private lateinit var binding: ActivityBackupBinding
 
     private val mainCoroutineContext: CoroutineContext
         get() = Job() + Dispatchers.Main + initCoroutineExceptionHandler()
@@ -45,18 +45,19 @@ class BackupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_backup)
+        binding = ActivityBackupBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         tangemSdk = TangemSdk.init(this)
         backupService = BackupService.init(tangemSdk, this)
         backupService.discardSavedBackup()
 
-        btn_add_backup_card.setOnClickListener {
+        binding.btnAddBackupCard.setOnClickListener {
             backupService.addBackupCard { result ->
                 postUi {
                     when (result) {
                         is CompletionResult.Success -> {
-                            tv_add_backup_card.text = "${backupService.addedBackupCardsCount} added."
+                            binding.tvAddBackupCard.text = "${backupService.addedBackupCardsCount} added."
                         }
                         is CompletionResult.Failure -> Unit
                     }
@@ -64,12 +65,12 @@ class BackupActivity : AppCompatActivity() {
             }
         }
 
-        btn_add_origin_card.setOnClickListener {
+        binding.btnAddOriginCard.setOnClickListener {
             backupService.readPrimaryCard { result ->
                 postUi {
                     when (result) {
                         is CompletionResult.Success -> {
-                            tv_add_origin_card.text = "Good! You've scanned origin card."
+                            binding.btnAddOriginCard.text = "Good! You've scanned origin card."
                         }
                         is CompletionResult.Failure -> Unit
                     }
@@ -77,27 +78,27 @@ class BackupActivity : AppCompatActivity() {
             }
         }
 
-        til_access_code.setOnFocusChangeListener { v, hasFocus ->
-            if (!hasFocus && !et_access_code.text.isNullOrBlank()) {
-                backupService.setAccessCode(et_access_code.text.toString())
+        binding.tilAccessCode.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus && !binding.etAccessCode.text.isNullOrBlank()) {
+                backupService.setAccessCode(binding.etAccessCode.text.toString())
             }
         }
 
-        et_access_code.asFlow().debounce(timeoutMillis = 400)
+        binding.etAccessCode.asFlow().debounce(timeoutMillis = 400)
             .filter { it.isNotBlank() }
             .onEach {
                 backupService.setAccessCode(it)
             }
             .launchIn(mainScope)
 
-        btn_start.setOnClickListener {
+        binding.btnStart.setOnClickListener {
             if (backupService.currentState != BackupService.State.Preparing) {
                 backupService.proceedBackup {
                 }
             }
         }
 
-        btn_reset.setOnClickListener {
+        binding.btnReset.setOnClickListener {
             tangemSdk.startSessionWithRunnable(ResetBackupCommand()) {
             }
         }

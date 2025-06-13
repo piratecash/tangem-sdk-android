@@ -10,33 +10,33 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <include layout="@layout/card" />
+        <include android:id="@+id/layoutCard" layout="@layout/card" />
 
-        <include layout="@layout/attestation" />
+        <include android:id="@+id/layoutAttestation" layout="@layout/attestation" />
 
-        <include layout="@layout/wallet" />
+        <include android:id="@+id/layoutWallet" layout="@layout/wallet" />
 
-        <include layout="@layout/sign" />
+        <include android:id="@+id/layoutSign" layout="@layout/sign" />
 
-        <include layout="@layout/hd_wallet" />
+        <include android:id="@+id/layoutHdWallet" layout="@layout/hd_wallet" />
 
-        <include layout="@layout/backup" />
+        <include android:id="@+id/layoutBackup" layout="@layout/backup" />
 
-        <include layout="@layout/issuer_data" />
+        <include android:id="@+id/layoutIssuerData" layout="@layout/issuer_data" />
 
-        <include layout="@layout/issuer_ex_data" />
+        <include android:id="@+id/layoutIssuerExData" layout="@layout/issuer_ex_data" />
 
-        <include layout="@layout/user_data" />
+        <include android:id="@+id/layoutUserData" layout="@layout/user_data" />
 
-        <include layout="@layout/set_pin" />
+        <include android:id="@+id/layoutSetPin" layout="@layout/set_pin" />
 
-        <include layout="@layout/file_data" />
+        <include android:id="@+id/layoutFileData" layout="@layout/file_data" />
 
-        <include layout="@layout/json_rpc" />
+        <include android:id="@+id/layoutJsonRpc" layout="@layout/json_rpc" />
 
-        <include layout="@layout/utils" />
+        <include android:id="@+id/layoutUtils" layout="@layout/utils" />
 
-        <include layout="@layout/theme" />
+        <include android:id="@+id/layoutTheme" layout="@layout/theme" />
 
     </LinearLayout>
 

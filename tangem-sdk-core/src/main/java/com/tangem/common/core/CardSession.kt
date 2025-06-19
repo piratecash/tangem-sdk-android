@@ -539,22 +539,26 @@ class CardSession(
                 is CompletionResult.Failure -> {
                     Log.session { "requestUserCode: Failure ${result.error}" }
                     if (result.error is TangemSdkError.UserForgotTheCode) {
-                        viewDelegate.dismiss()
-                        restoreUserCode(type, cardId) { restoreCodeResult ->
-                            when (restoreCodeResult) {
-                                is CompletionResult.Success -> {
-                                    updateEnvironment(type, restoreCodeResult.data)
-                                    resetCodesController = null
-                                    callback(CompletionResult.Success(Unit))
-                                }
-                                is CompletionResult.Failure -> {
-                                    callback(CompletionResult.Failure(restoreCodeResult.error))
-                                }
-                            }
-                        }
+                        restoreAccessCode(type, callback)
                     } else {
                         callback(CompletionResult.Failure(result.error))
                     }
+                }
+            }
+        }
+    }
+
+    fun restoreAccessCode(type: UserCodeType, callback: CompletionCallback<Unit>) {
+        viewDelegate.dismiss()
+        restoreUserCode(type, cardId) { restoreCodeResult ->
+            when (restoreCodeResult) {
+                is CompletionResult.Success -> {
+                    updateEnvironment(type, restoreCodeResult.data)
+                    resetCodesController = null
+                    callback(CompletionResult.Success(Unit))
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(restoreCodeResult.error))
                 }
             }
         }

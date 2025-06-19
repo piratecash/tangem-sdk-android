@@ -21,6 +21,7 @@ import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.common.tlv.TlvTag
 import com.tangem.operations.Command
+import com.tangem.operations.PreflightReadMode
 
 class SetUserCodeCommand private constructor() : Command<SuccessResponse>() {
 
@@ -30,6 +31,14 @@ class SetUserCodeCommand private constructor() : Command<SuccessResponse>() {
     private var codes = mutableMapOf<UserCodeType, UserCodeAction>()
 
     override fun requiresPasscode(): Boolean = isPasscodeRequire
+
+    override fun preflightReadMode(): PreflightReadMode {
+        return if(codes[UserCodeType.AccessCode] == UserCodeAction.Restore) {
+            PreflightReadMode.ReadCardOnly
+        } else {
+            super.preflightReadMode()
+        }
+    }
 
     override fun prepare(session: CardSession, callback: CompletionCallback<Unit>) {
         requestIfNeeded(UserCodeType.AccessCode, session) { result ->
@@ -78,6 +87,13 @@ class SetUserCodeCommand private constructor() : Command<SuccessResponse>() {
                 callback(CompletionResult.Failure(TangemSdkError.PasscodeCannotBeChanged()))
                 return
             }
+        }
+
+        if (codes[UserCodeType.AccessCode] == UserCodeAction.Restore) {
+            session.restoreAccessCode(UserCodeType.AccessCode) {
+                callback(CompletionResult.Success(SuccessResponse(session.cardId!!)))
+            }
+            return
         }
 
         super.run(session) { result ->
@@ -163,6 +179,13 @@ class SetUserCodeCommand private constructor() : Command<SuccessResponse>() {
     }
 
     companion object {
+        fun restoreAccessCode(): SetUserCodeCommand {
+            return SetUserCodeCommand().apply {
+                codes[UserCodeType.AccessCode] = UserCodeAction.Restore
+                codes[UserCodeType.Passcode] = UserCodeAction.NotChange
+            }
+        }
+
         fun changeAccessCode(accessCode: String?): SetUserCodeCommand {
             return SetUserCodeCommand().apply {
                 codes[UserCodeType.AccessCode] = accessCode?.let { UserCodeAction.StringValue(it) }
@@ -216,6 +239,7 @@ class SetUserCodeCommand private constructor() : Command<SuccessResponse>() {
         class StringValue(value: String) : UserCodeAction(value.calculateSha256())
         class Value(data: ByteArray) : UserCodeAction(data)
         object NotChange : UserCodeAction(null)
+        object Restore : UserCodeAction(null)
     }
 }
 

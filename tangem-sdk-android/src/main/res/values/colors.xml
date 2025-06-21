@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="sdk_primary">#0099FF</color>
+    <color name="sdk_primary">#F58400</color>
     <color name="sdk_on_primary">#FFFFFF</color>
     <color name="sdk_secondary">@color/sdk_primary</color>
     <color name="sdk_on_secondary">@color/sdk_on_primary</color>

@@ -65,7 +65,7 @@
 
         <Button
             android:id="@+id/btnForgotCode"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="@style/CustomOutlineButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"

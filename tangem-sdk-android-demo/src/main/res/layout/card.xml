@@ -149,6 +149,12 @@
                 android:layout_height="wrap_content"
                 android:text="Load card info" />
 
+            <Button
+                android:id="@+id/btnResetAccessCode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Restore access code" />
+
             <FrameLayout
                 android:id="@+id/walletInfoContainer"
                 android:layout_width="match_parent"

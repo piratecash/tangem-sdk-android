@@ -125,6 +125,7 @@ class CommandListFragment : BaseFragment() {
             scanCard(policy)
         }
         binding.layoutCard.btnLoadCardInfo.setOnClickListener { loadCardInfo() }
+        binding.layoutCard.btnResetAccessCode.setOnClickListener { restoreAccessCode() }
 
         binding.layoutBackup.btnPersonalizePrimary.setOnClickListener { personalize(Backup.primaryCardConfig()) }
         binding.layoutBackup.btnPersonalizeBackup1.setOnClickListener { personalize(Backup.backup1Config()) }

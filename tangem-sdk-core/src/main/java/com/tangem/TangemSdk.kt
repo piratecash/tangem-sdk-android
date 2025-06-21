@@ -505,6 +505,33 @@ class TangemSdk(
     /**
      * This method launches a [SetUserCodeCommand] on a new thread.
      *
+     * Restore card's access code
+     *
+     * @param cardId: CID, Unique Tangem card ID number.
+     * @param initialMessage: A custom description that shows at the beginning of the NFC session.
+     * If null, default message will be used.
+     * @param callback: is triggered on the completion of the [SetUserCodeCommand] and provides
+     * card response in the form of [SuccessResponse] if the task was performed successfully
+     * or [TangemSdkError] in case of an error.
+     * */
+    fun restoreAccessCode(
+        cardId: String,
+        initialMessage: Message? = null,
+        callback: CompletionCallback<SuccessResponse>,
+    ) {
+        val command = SetUserCodeCommand.restoreAccessCode()
+        startSessionWithRunnable(
+            runnable = command,
+            cardId = cardId,
+            initialMessage = initialMessage,
+            accessCode = null,
+            callback = callback,
+        )
+    }
+
+    /**
+     * This method launches a [SetUserCodeCommand] on a new thread.
+     *
      * Set or change card's passcode
      *
      * @param passcode: Passcode to set. If null, the user will be prompted to enter code before operation

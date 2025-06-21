@@ -13,6 +13,8 @@
         <item name="colorError">@color/sdk_error</item>
         <item name="colorOnError">@color/sdk_on_error</item>
         <item name="bottomSheetDialogTheme">@style/SdkBottomSheetDialogStyle</item>
+        <item name="materialButtonStyle">@style/CustomMaterialButtonStyle</item>
+        <item name="buttonStyle">@style/CustomButtonStyle</item>
     </style>
 
     <style name="SdkBottomSheetDialogStyle" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
@@ -22,5 +24,27 @@
 <!--        <item name="android:backgroundDimEnabled">true</item>-->
 <!--        <item name="android:backgroundDimAmount">0.6</item>-->
         <item name="android:backgroundTint">@color/sdk_background</item>
+        <item name="materialButtonStyle">@style/CustomMaterialButtonStyle</item>
+        <item name="buttonStyle">@style/CustomButtonStyle</item>
+    </style>
+
+    <style name="CustomMaterialButtonStyle" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/sdk_primary</item>
+        <item name="android:textColor">@color/sdk_on_background</item>
+        <item name="cornerRadius">25dp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="CustomButtonStyle" parent="Widget.AppCompat.Button">
+        <item name="android:background">@color/sdk_primary</item>
+        <item name="android:textColor">@color/sdk_on_background</item>
+        <item name="cornerRadius">25dp</item>
+    </style>
+
+    <style name="CustomOutlineButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="backgroundTint">@color/sdk_on_primary</item>
+        <item name="strokeColor">@color/sdk_primary</item>
+        <item name="android:textColor">@color/sdk_on_background</item>
+        <item name="cornerRadius">25dp</item>
     </style>
 </resources>

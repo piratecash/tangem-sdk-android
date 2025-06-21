@@ -144,6 +144,14 @@ abstract class BaseFragment : Fragment() {
         sdk.loadCardInfo(card?.cardPublicKey!!, card?.cardId!!) { handleResult(it) }
     }
 
+    protected fun restoreAccessCode() {
+        val cardId = card?.cardId.guard {
+            showToast("CardId & walletPublicKey required. Scan your card before proceeding")
+            return
+        }
+        sdk.restoreAccessCode(cardId, initialMessage) { handleResult(it) }
+    }
+
     protected fun attest(mode: AttestationTask.Mode) {
         val command = AttestationTask(mode, sdk.secureStorage)
         sdk.startSessionWithRunnable(command, card?.cardId, initialMessage) { handleResult(it) }

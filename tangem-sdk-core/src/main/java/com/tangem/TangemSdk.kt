@@ -24,7 +24,7 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
-import com.tangem.operations.*
+import com.tangem.operations.ScanTask
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
@@ -37,14 +37,19 @@ import com.tangem.operations.issuerAndUserData.*
 import com.tangem.operations.personalization.DepersonalizeCommand
 import com.tangem.operations.personalization.DepersonalizeResponse
 import com.tangem.operations.personalization.PersonalizeCommand
-import com.tangem.operations.personalization.entities.*
+import com.tangem.operations.personalization.entities.Acquirer
+import com.tangem.operations.personalization.entities.CardConfig
+import com.tangem.operations.personalization.entities.Issuer
+import com.tangem.operations.personalization.entities.Manufacturer
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.preflightread.CardIdPreflightReadFilter
 import com.tangem.operations.preflightread.PreflightReadFilter
 import com.tangem.operations.sign.*
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
-import com.tangem.operations.wallet.*
-import kotlinx.coroutines.*
+import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.operations.wallet.CreateWalletTask
+import com.tangem.operations.wallet.PurgeWalletCommand
+import kotlinx.coroutines.launch
 
 /**
  * The main interface of Tangem SDK that allows your app to communicate with Tangem cards.
@@ -224,6 +229,44 @@ class TangemSdk(
         callback: CompletionCallback<SignResponse>,
     ) {
         val command = SignCommand(hashes, walletPublicKey, derivationPath)
+        startSessionWithRunnable(
+            runnable = command,
+            cardId = cardId,
+            initialMessage = initialMessage,
+            accessCode = null,
+            callback = callback,
+        )
+    }
+
+    /**
+     * This method launches a [SignCommand] on a new thread.
+     *
+     * It allows you to sign one or multiple hashes.
+     * Simultaneous signing of array of hashes in a single [SignCommand] is required to support
+     * Bitcoin-type multi-input blockchains (UTXO).
+     * The [SignCommand] will return a corresponding array of signatures.
+     *
+     * Please note that Tangem cards usually protect the signing with a security delay
+     * that may last up to 45 seconds, depending on a card.
+     * It is for [SessionViewDelegate] to notify users of security delay.
+     *
+     * @param dataToSign: Array of transaction hashes. It can be from one or up to ten hashes of the same length.
+     * @param walletPublicKey: Public key of the wallet that should sign hashes.
+     * @param cardId: CID, Unique Tangem card ID number
+     * @param initialMessage: A custom description that shows at the beginning of the NFC session.
+     * If null, default message will be used.
+     * @param callback: is triggered on the completion of the [SignCommand] and provides response
+     * in the form of list of signed hashes [List<ByteArray>] if the task was performed successfully
+     * or [TangemSdkError] in case of an error.
+     */
+    fun sign(
+        dataToSign: List<SignData>,
+        walletPublicKey: ByteArray,
+        cardId: String?,
+        initialMessage: Message? = null,
+        callback: CompletionCallback<List<SignHashResponse>>,
+    ) {
+        val command = MultipleSignCommand(dataToSign, walletPublicKey)
         startSessionWithRunnable(
             runnable = command,
             cardId = cardId,

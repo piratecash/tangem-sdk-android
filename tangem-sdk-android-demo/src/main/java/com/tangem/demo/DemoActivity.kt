@@ -78,7 +78,6 @@ class DemoActivity : AppCompatActivity() {
     private fun initSdk(): TangemSdk {
         val config = Config().apply {
             linkedTerminal = false
-            allowUntrustedCards = true
             filter.allowedCardTypes = FirmwareVersion.FirmwareType.values().toList()
             defaultDerivationPaths = mutableMapOf(
                 EllipticCurve.Secp256k1 to listOf(

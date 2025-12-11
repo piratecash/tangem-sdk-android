@@ -26,6 +26,15 @@ fun String.hexToBytes(): ByteArray {
     }
 }
 
+@Suppress("MagicNumber")
+fun String.hexToBytesOrNull(): ByteArray? {
+    return try {
+        hexToBytes()
+    } catch (e: Exception) {
+        null
+    }
+}
+
 fun String.toSnakeCase(): String = replace("(?<=.)(?=\\p{Upper})".toRegex(), "_")
 
 fun String.titleFormatted(symbol: String = "=", maxLength: Int = 50): String {

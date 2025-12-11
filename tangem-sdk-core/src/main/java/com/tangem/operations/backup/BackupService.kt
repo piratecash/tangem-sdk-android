@@ -19,18 +19,14 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.operations.CommandResponse
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import java.io.PrintWriter
 import java.io.StringWriter
 
 @Suppress("LargeClass")
+@OptIn(ExperimentalCoroutinesApi::class)
 class BackupService(
     private val sdk: TangemSdk,
     private var repo: BackupRepo,
@@ -83,7 +79,12 @@ class BackupService(
     }
 
     private val handleErrors = sdk.config.handleErrors
-    private val backupCertificateProvider = BackupCertificateProvider()
+    private val backupCertificateProvider by lazy {
+        BackupCertificateProvider(
+            secureStorage = sdk.secureStorage,
+            config = sdk.config,
+        )
+    }
 
     init {
         updateState()
@@ -108,11 +109,26 @@ class BackupService(
             readBackupCard(primaryCard, callback)
             return
         }
+
+        val primaryCardFirmwareVersion = primaryCard.firmwareVersion
+        if (primaryCardFirmwareVersion == null) {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPrimaryCard()))
+            return
+        }
+
+        val primaryCardManufacturerName = primaryCard.manufacturer?.name
+        if (primaryCardManufacturerName == null) {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPrimaryCard()))
+            return
+        }
+
         backupScope.launch {
             fetchCertificate(
                 cardId = primaryCard.cardId,
                 cardPublicKey = primaryCard.cardPublicKey,
-                isDevMode = primaryCard.firmwareVersion?.type == FirmwareVersion.FirmwareType.Sdk,
+                issuerPublicKey = primaryCard.issuer.publicKey,
+                manufacturerName = primaryCardManufacturerName,
+                firmwareVersion = primaryCardFirmwareVersion,
                 onFailed = { callback(CompletionResult.Failure(it)) },
             ) {
                 val updatedPrimaryCard = primaryCard.copy(certificate = it)
@@ -182,7 +198,7 @@ class BackupService(
         updateState()
     }
 
-    fun readPrimaryCard(iconScanRes: Int? = null, cardId: String? = null, callback: CompletionCallback<Unit>) {
+    fun readPrimaryCard(iconScanRes: Int? = null, cardId: String? = null, callback: CompletionCallback<PrimaryCard>) {
         val formattedCardId = cardId?.let { CardIdFormatter(sdk.config.cardIdDisplayFormat).getFormattedCardId(it) }
 
         val message = formattedCardId?.let {
@@ -201,7 +217,7 @@ class BackupService(
             when (result) {
                 is CompletionResult.Success -> {
                     setPrimaryCard(result.data)
-                    callback(CompletionResult.Success(Unit))
+                    callback(CompletionResult.Success(result.data))
                 }
 
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
@@ -209,17 +225,22 @@ class BackupService(
         }
     }
 
+    @Suppress("LongParameterList")
     private suspend fun fetchCertificate(
         cardId: String,
         cardPublicKey: ByteArray,
-        isDevMode: Boolean,
+        issuerPublicKey: ByteArray,
+        manufacturerName: String,
+        firmwareVersion: FirmwareVersion,
         onFailed: (TangemSdkError) -> Unit,
         onLoaded: (ByteArray) -> Unit,
     ) {
         backupCertificateProvider.getCertificate(
             cardId = cardId,
             cardPublicKey = cardPublicKey,
-            developmentMode = isDevMode,
+            issuerPublicKey = issuerPublicKey,
+            manufacturerName = manufacturerName,
+            firmwareVersion = firmwareVersion,
         ) {
             val certificate = when (it) {
                 is CompletionResult.Success -> it.data
@@ -273,7 +294,9 @@ class BackupService(
             fetchCertificate(
                 cardId = backupCard.cardId,
                 cardPublicKey = backupCard.cardPublicKey,
-                isDevMode = backupCard.firmwareVersion?.type == FirmwareVersion.FirmwareType.Sdk,
+                issuerPublicKey = backupCardResponse.card.issuer.publicKey,
+                manufacturerName = backupCardResponse.card.manufacturer.name,
+                firmwareVersion = backupCardResponse.card.firmwareVersion,
                 onFailed = { callback(CompletionResult.Failure(TangemSdkError.IssuerSignatureLoadingFailed())) },
             ) { cert ->
                 val updatedBackupCard = backupCard.copy(certificate = cert)
@@ -506,26 +529,13 @@ data class PrimaryCard(
     val existingWalletsCount: Int,
     val isHDWalletAllowed: Boolean,
     val issuer: Card.Issuer,
+    val manufacturer: Card.Manufacturer?,
     val walletCurves: List<EllipticCurve>,
     val batchId: String?, // for compatibility with interrupted backups
     val firmwareVersion: FirmwareVersion?, // for compatibility with interrupted backups
     val isKeysImportAllowed: Boolean?, // for compatibility with interrupted backups
     val certificate: ByteArray?,
-) : CommandResponse {
-    constructor(rawPrimaryCard: RawPrimaryCard, certificate: ByteArray) : this(
-        cardId = rawPrimaryCard.cardId,
-        cardPublicKey = rawPrimaryCard.cardPublicKey,
-        linkingKey = rawPrimaryCard.linkingKey,
-        existingWalletsCount = rawPrimaryCard.existingWalletsCount,
-        isHDWalletAllowed = rawPrimaryCard.isHDWalletAllowed,
-        issuer = rawPrimaryCard.issuer,
-        walletCurves = rawPrimaryCard.walletCurves,
-        batchId = rawPrimaryCard.batchId,
-        firmwareVersion = rawPrimaryCard.firmwareVersion,
-        isKeysImportAllowed = rawPrimaryCard.isKeysImportAllowed,
-        certificate = certificate,
-    )
-}
+) : CommandResponse
 
 @JsonClass(generateAdapter = true)
 class RawBackupCard(

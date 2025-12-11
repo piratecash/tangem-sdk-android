@@ -65,7 +65,6 @@ enum class TlvTag(val code: Int, val shouldMask: Boolean = false) {
     Uid(code = 0x0B),
 
     ManufacturerName(code = 0x20),
-    CardIDManufacturerSignature(code = 0x86),
 
     IssuerPublicKey(code = 0x30),
     IssuerTransactionPublicKey(code = 0x31),
@@ -114,7 +113,7 @@ enum class TlvTag(val code: Int, val shouldMask: Boolean = false) {
     IssuerName(code = 0x83),
     BlockchainName(code = 0x84),
     ManufacturerPublicKey(code = 0x85),
-    CardIdManufacturerSignature(code = 0x86),
+    CardIdManufacturerSignature(code = 0x86, shouldMask = true),
 
     ProductMask(code = 0x8A),
     PaymentFlowVersion(code = 0x54),

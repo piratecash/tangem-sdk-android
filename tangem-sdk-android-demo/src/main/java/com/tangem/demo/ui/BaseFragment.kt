@@ -141,7 +141,8 @@ abstract class BaseFragment : Fragment() {
             showToast("CardId & publicKey required. Scan your card before proceeding")
             return
         }
-        sdk.loadCardInfo(card?.cardPublicKey!!, card?.cardId!!) { handleResult(it) }
+        Toast.makeText(context, "Not implemented", Toast.LENGTH_SHORT).show()
+        //sdk.loadCardInfo(card?.cardPublicKey!!, card?.cardId!!) { handleResult(it) }
     }
 
     protected fun restoreAccessCode() {

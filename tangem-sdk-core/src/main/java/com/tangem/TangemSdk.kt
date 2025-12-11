@@ -27,8 +27,6 @@ import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
 import com.tangem.operations.ScanTask
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
-import com.tangem.operations.attestation.CardVerifyAndGetInfo
-import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -76,7 +74,6 @@ class TangemSdk(
 
     private var cardSession: CardSession? = null
 
-    private val onlineCardVerifier = OnlineCardVerifier()
     private val jsonRpcConverter: JSONRPCConverter by lazy { JSONRPCConverter.shared(wordlist) }
 
     init {
@@ -434,26 +431,6 @@ class TangemSdk(
             accessCode = null,
             callback = callback,
         )
-    }
-
-    /**
-     *  Get the card info and verify with Tangem backend. Do not use for developer cards
-     *
-     *  @param cardPublicKey: CardPublicKey returned by [ReadCommand]
-     *  @param cardId: CID, Unique Tangem card ID number.
-     *  @param callback: [CardVerifyAndGetInfo.Response.Item]
-     */
-    fun loadCardInfo(
-        cardPublicKey: ByteArray,
-        cardId: String,
-        callback: CompletionCallback<CardVerifyAndGetInfo.Response.Item>,
-    ) {
-        onlineCardVerifier.scope.launch {
-            when (val result = onlineCardVerifier.getCardInfo(cardId, cardPublicKey)) {
-                is Result.Success -> callback(CompletionResult.Success(result.data))
-                is Result.Failure -> callback(CompletionResult.Failure(result.toTangemSdkError()))
-            }
-        }
     }
 
     /**

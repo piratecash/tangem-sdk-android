@@ -138,7 +138,7 @@ object CardDeserializer {
         Card.Manufacturer(
             decoder.decode(TlvTag.ManufacturerName),
             cardDataDecoder.decode(TlvTag.ManufactureDateTime),
-            cardDataDecoder.decodeOptional(TlvTag.CardIDManufacturerSignature),
+            cardDataDecoder.decodeOptional(TlvTag.CardIdManufacturerSignature),
         )
 
     private fun cardIssuer(decoder: TlvDecoder, cardDataDecoder: TlvDecoder): Card.Issuer = Card.Issuer(

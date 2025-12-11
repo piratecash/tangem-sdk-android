@@ -20,6 +20,14 @@ class AndroidSecureStorage(
         return preferences.getString(account, null)?.hexToBytes()
     }
 
+    override fun getAsString(key: String): String? {
+        return preferences.getString(key, null)
+    }
+
+    override fun store(key: String, value: String) {
+        editor.putString(key, value).apply()
+    }
+
     override fun store(data: ByteArray, account: String, overwrite: Boolean) {
         editor.putString(account, data.toHexString()).apply()
     }

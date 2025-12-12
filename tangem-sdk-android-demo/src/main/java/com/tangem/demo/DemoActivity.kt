@@ -85,6 +85,7 @@ class DemoActivity : AppCompatActivity() {
                     DerivationPath(rawPath = "m/44/1"),
                 ),
             )
+            tangemApiBaseUrl = DemoApplication.TANGEM_API_BASE_URL
         }
         val secureStorage = SecureStorage.create(this)
         val nfcManager = TangemSdk.initNfcManager(this)

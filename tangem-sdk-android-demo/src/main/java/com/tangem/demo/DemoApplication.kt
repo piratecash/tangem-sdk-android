@@ -14,6 +14,10 @@ class DemoApplication : Application() {
     lateinit var shPrefs: SharedPreferences
         private set
 
+    companion object {
+        const val TANGEM_API_BASE_URL = "https://api.tangem.org/"
+    }
+
     override fun onCreate() {
         super.onCreate()
 

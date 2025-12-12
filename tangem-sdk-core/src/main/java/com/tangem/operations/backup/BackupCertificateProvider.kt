@@ -1,52 +1,60 @@
 package com.tangem.operations.backup
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CompletionCallback
+import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.services.Result
+import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.tlv.TlvBuilder
 import com.tangem.common.tlv.TlvTag
-import com.tangem.crypto.sign
-import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.api.TangemApiService
+import com.tangem.operations.attestation.service.OnlineAttestationServiceFactory
 
-class BackupCertificateProvider {
+internal class BackupCertificateProvider(
+    secureStorage: SecureStorage,
+    private val config: Config,
+) {
 
-    private val onlineCardVerifier: OnlineCardVerifier = OnlineCardVerifier()
+    private val factory: OnlineAttestationServiceFactory by lazy {
+        OnlineAttestationServiceFactory(
+            tangemApiService = TangemApiService { config.tangemApiBaseUrl },
+            secureStorage = secureStorage,
+        )
+    }
 
+    @Suppress("LongParameterList")
     suspend fun getCertificate(
         cardId: String,
         cardPublicKey: ByteArray,
-        developmentMode: Boolean,
+        issuerPublicKey: ByteArray,
+        manufacturerName: String,
+        firmwareVersion: FirmwareVersion,
         callback: CompletionCallback<ByteArray>,
     ) {
-        if (developmentMode) {
-            val issuerPrivateKey =
-                "11121314151617184771ED81F2BACF57479E4735EB1405083927372D40DA9E92".hexToBytes()
-            val issuerSignature = cardPublicKey.sign(issuerPrivateKey)
-            callback(CompletionResult.Success(generateCertificate(cardPublicKey, issuerSignature)))
-            return
-        }
+        val service = factory.create(
+            cardPublicKey = cardPublicKey,
+            issuerPublicKey = issuerPublicKey,
+            manufacturerName = manufacturerName,
+            firmwareVersion = firmwareVersion,
+        )
 
-        when (
-            val result =
-                onlineCardVerifier.getCardData(cardId, cardPublicKey)
-        ) {
-            is Result.Success -> {
+        when (val result = service.attestCard(cardId, cardPublicKey)) {
+            is CompletionResult.Success -> {
                 val signature = result.data.issuerSignature.guard {
                     callback(CompletionResult.Failure(TangemSdkError.IssuerSignatureLoadingFailed()))
                     return
                 }
-                callback(
-                    CompletionResult.Success(
-                        generateCertificate(cardPublicKey, signature.hexToBytes()),
-                    ),
-                )
-            }
 
-            is Result.Failure ->
+                val certificate = generateCertificate(cardPublicKey, signature.hexToBytes())
+
+                callback(CompletionResult.Success(data = certificate))
+            }
+            is CompletionResult.Failure -> {
                 callback(CompletionResult.Failure(TangemSdkError.IssuerSignatureLoadingFailed()))
+            }
         }
     }
 

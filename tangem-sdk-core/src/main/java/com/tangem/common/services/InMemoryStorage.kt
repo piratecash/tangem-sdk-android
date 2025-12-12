@@ -4,9 +4,18 @@ import com.tangem.common.services.secure.SecureStorage
 
 class InMemoryStorage : SecureStorage {
     private val byteArrayStorage = mutableMapOf<String, ByteArray>()
+    private val stringStorage = mutableMapOf<String, String>()
 
     override fun get(account: String): ByteArray? {
         return byteArrayStorage[account]
+    }
+
+    override fun getAsString(key: String): String? {
+        return stringStorage[key]
+    }
+
+    override fun store(key: String, value: String) {
+        stringStorage[key] = value
     }
 
     override fun store(data: ByteArray, account: String, overwrite: Boolean) {
@@ -15,6 +24,7 @@ class InMemoryStorage : SecureStorage {
 
     override fun delete(account: String) {
         byteArrayStorage.remove(account)
+        stringStorage.remove(account)
     }
 
     override fun storeKey(key: ByteArray, account: String) {

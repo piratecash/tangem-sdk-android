@@ -28,3 +28,4 @@ local.properties
 **/fastlane/test_output
 
 .sqldelight
+/.claude/settings.local.json

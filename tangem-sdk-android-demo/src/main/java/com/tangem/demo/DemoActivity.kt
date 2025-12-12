@@ -21,11 +21,7 @@ import com.tangem.demo.ui.separtedCommands.CommandListFragment
 import com.tangem.demo.ui.settings.SettingsFragment
 import com.tangem.demo.ui.viewDelegate.ViewDelegateFragment
 import com.tangem.sdk.DefaultSessionViewDelegate
-import com.tangem.sdk.extensions.createLogger
-import com.tangem.sdk.extensions.getWordlist
-import com.tangem.sdk.extensions.initAuthenticationManager
-import com.tangem.sdk.extensions.initKeystoreManager
-import com.tangem.sdk.extensions.initNfcManager
+import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.storage.create
 import com.tangem.tangem_demo.databinding.ActivityDemoBinding

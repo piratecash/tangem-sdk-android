@@ -19,6 +19,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.operations.CommandResponse
+import com.tangem.operations.attestation.AttestationTask
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -106,6 +107,12 @@ class BackupService(
         }
 
         if (primaryCard.certificate != null) {
+            readBackupCard(primaryCard, callback)
+            return
+        }
+
+        // Skip certificate fetching in FullOffline mode
+        if (sdk.config.attestationMode == AttestationTask.Mode.FullOffline) {
             readBackupCard(primaryCard, callback)
             return
         }
@@ -289,8 +296,20 @@ class BackupService(
         backupCardResponse: StartBackupCardLinkingTaskResponse,
         callback: CompletionCallback<Card>,
     ) {
+        val backupCard = backupCardResponse.backupCard
+
+        // Skip certificate fetching in FullOffline mode
+        if (sdk.config.attestationMode == AttestationTask.Mode.FullOffline) {
+            val updatedList = repo.data.backupCards
+                .filter { it.cardId != backupCard.cardId }
+                .plus(backupCard)
+            repo.data = repo.data.copy(backupCards = updatedList)
+            updateState()
+            callback(CompletionResult.Success(backupCardResponse.card))
+            return
+        }
+
         backupScope.launch {
-            val backupCard = backupCardResponse.backupCard
             fetchCertificate(
                 cardId = backupCard.cardId,
                 cardPublicKey = backupCard.cardPublicKey,

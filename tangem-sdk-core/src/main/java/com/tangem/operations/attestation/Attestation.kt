@@ -27,7 +27,12 @@ data class Attestation(
         }
 
     val mode: AttestationTask.Mode
-        get() = if (walletKeysAttestation == Status.Skipped) AttestationTask.Mode.Normal else AttestationTask.Mode.Full
+        get() = when {
+            walletKeysAttestation == Status.Skipped -> AttestationTask.Mode.Normal
+            cardKeyAttestation == Status.VerifiedOffline && walletKeysAttestation == Status.VerifiedOffline ->
+                AttestationTask.Mode.FullOffline
+            else -> AttestationTask.Mode.Full
+        }
 
     val rawRepresentation: String
         get() {

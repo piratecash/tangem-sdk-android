@@ -117,6 +117,10 @@ class AttestationTask(
                 runOnlineAttestation(session.scope, session.environment.card!!, session.environment)
                 runWalletsAttestation(session, callback)
             }
+            Mode.FullOffline -> {
+                // Run wallet attestation offline without online card attestation
+                runWalletsAttestationOffline(session, callback)
+            }
         }
     }
 
@@ -211,7 +215,9 @@ class AttestationTask(
             }
             Attestation.Status.Verified -> complete(session, callback)
             Attestation.Status.VerifiedOffline -> {
-                if (session.environment.config.attestationMode == Mode.Offline) {
+                if (session.environment.config.attestationMode == Mode.Offline ||
+                    session.environment.config.attestationMode == Mode.FullOffline
+                ) {
                     complete(session, callback)
                     return
                 }
@@ -259,6 +265,35 @@ class AttestationTask(
                     val status = if (hasWarnings) Attestation.Status.Warning else Attestation.Status.Verified
                     currentAttestationStatus = currentAttestationStatus.copy(walletKeysAttestation = status)
                     runExtraAttestation(session, callback)
+                }
+                is CompletionResult.Failure -> {
+                    // Wallets attestation failed. Update status and continue attestation
+                    if (result.error is TangemSdkError.CardVerificationFailed) {
+                        currentAttestationStatus = currentAttestationStatus.copy(
+                            walletKeysAttestation = Attestation.Status.Failed,
+                        )
+                        callback(CompletionResult.Failure(result.error))
+                    } else {
+                        callback(CompletionResult.Failure(result.error))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun runWalletsAttestationOffline(session: CardSession, callback: CompletionCallback<Attestation>) {
+        attestWallets(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    // Wallets attestation completed offline. Update status and complete
+                    val hasWarnings = result.data
+                    val status = if (hasWarnings) {
+                        Attestation.Status.Warning
+                    } else {
+                        Attestation.Status.VerifiedOffline
+                    }
+                    currentAttestationStatus = currentAttestationStatus.copy(walletKeysAttestation = status)
+                    complete(session, callback)
                 }
                 is CompletionResult.Failure -> {
                     // Wallets attestation failed. Update status and continue attestation
@@ -333,6 +368,13 @@ class AttestationTask(
         Offline,
         Normal,
         Full,
+        /**
+         * Full offline mode - performs offline verification and allows backup/wallet creation
+         * without requiring online certificate fetching. Use this mode when you need to operate
+         * completely offline. Note: Backup operations may fail at the card firmware level
+         * if the card requires certificates.
+         */
+        FullOffline,
     }
 
     companion object {

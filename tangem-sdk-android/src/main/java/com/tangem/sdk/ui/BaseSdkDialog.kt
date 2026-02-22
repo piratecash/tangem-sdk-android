@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.LinearLayout
 import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -14,6 +15,10 @@ import com.tangem.sdk.ui.widget.StateWidget
 import java.util.concurrent.atomic.AtomicBoolean
 
 open class BaseSdkDialog(context: Context) : BottomSheetDialog(context) {
+
+    init {
+        window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
 
     protected val stateWidgets = mutableListOf<StateWidget<*>>()
     private val isDismissedProgrammatically = AtomicBoolean(false)

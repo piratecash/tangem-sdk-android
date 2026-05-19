@@ -69,8 +69,9 @@ class MoshiJsonConverter(adapters: List<Any> = listOf(), typedAdapters: Map<Clas
             null -> null
             is List<*> -> null
             is String -> {
-                if (any.startsWith("{") && any.endsWith("}")) {
-                    fromJson<Map<String, Any?>?>(any, typedMap())
+                val trimmed = any.trim()
+                if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+                    fromJson<Map<String, Any?>?>(trimmed, typedMap())
                 } else {
                     null
                 }

@@ -148,7 +148,7 @@ class DefaultSessionViewDelegate(
     }
 
     override fun dismiss() {
-        readingDialog?.dismissInternal()
+        postUI { readingDialog?.dismissInternal() }
     }
 
     override fun setConfig(config: Config) {

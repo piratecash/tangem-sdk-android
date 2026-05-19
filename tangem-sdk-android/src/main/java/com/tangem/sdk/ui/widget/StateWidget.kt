@@ -17,6 +17,8 @@ interface StateWidget<T> : StateConsumer<T> {
      *
      */
     fun onBottomSheetDismiss()
+
+    fun onDismiss()
 }
 
 abstract class BaseStateWidget<T>(protected val mainView: View) : StateWidget<T> {
@@ -32,6 +34,9 @@ abstract class BaseStateWidget<T>(protected val mainView: View) : StateWidget<T>
 
     override fun onBottomSheetDismiss() {
         onBottomSheetDismiss?.invoke()
+    }
+
+    override fun onDismiss() {
         onBottomSheetDismiss = null
     }
 

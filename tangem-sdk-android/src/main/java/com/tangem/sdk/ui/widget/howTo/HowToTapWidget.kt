@@ -65,8 +65,11 @@ class HowToTapWidget constructor(
         }
     }
 
-    override fun onBottomSheetDismiss() {
+    override fun onDismiss() {
         controller?.stop()
+        controller = null
+        viewContainer.removeAllViews()
+        super.onDismiss()
     }
 
     private fun createWidget(mode: HowToMode): NfcHowToWidget {
@@ -125,8 +128,9 @@ abstract class NfcHowToWidget(mainView: View) : BaseStateWidget<HowToState>(main
         imvSuccess.elevation = imvSuccess.dpToPx(dp = 5f)
     }
 
-    override fun onBottomSheetDismiss() {
+    override fun onDismiss() {
         setState(HowToState.Cancel)
+        super.onDismiss()
     }
 
     protected fun setText(textId: Int) {

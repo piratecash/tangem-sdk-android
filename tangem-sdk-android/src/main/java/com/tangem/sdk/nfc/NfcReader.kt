@@ -51,7 +51,7 @@ class NfcReader : CardReader {
         scope?.launchWithLock(readerMutex) {
             Log.nfc { "start NFC session, thread ${Thread.currentThread().id}" }
             nfcTag = null
-            listener?.readingIsActive = true
+            activateReading()
         }
     }
 
@@ -65,7 +65,7 @@ class NfcReader : CardReader {
     override fun resumeSession() {
         scope?.launchWithLock(readerMutex) {
             Log.nfc { "resume NFC session, thread ${Thread.currentThread().id}" }
-            listener?.readingIsActive = true
+            activateReading()
         }
     }
 
@@ -212,6 +212,11 @@ class NfcReader : CardReader {
     override fun forceDisableReaderMode() {
         Log.nfc { "forceDisableReaderMode" }
         listener?.onForceDisableReadingMode()
+    }
+
+    private fun activateReading() {
+        listener?.onForceEnableReadingMode()
+        listener?.readingIsActive = true
     }
 
     private fun CoroutineScope.launchWithLock(mutex: Mutex, action: suspend () -> Unit) {

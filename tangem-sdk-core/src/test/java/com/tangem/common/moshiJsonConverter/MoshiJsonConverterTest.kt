@@ -108,6 +108,10 @@ class MoshiJsonConverterTest {
         assertEquals(resultMap["jsonrpc"], "2.0")
         assertTrue((resultMap["params"] as Map<*, *>).isEmpty())
 
+        resultMap = moshi.toMap("$jsonMap\n")
+        assertEquals(resultMap["jsonrpc"], "2.0")
+        assertTrue((resultMap["params"] as Map<*, *>).isEmpty())
+
         val jsonMapWithNull = "{\"id\":null,\"jsonrpc\":\"2.0\"}"
         resultMap = moshi.toMap(jsonMapWithNull)
         assertTrue(resultMap.isNotEmpty())

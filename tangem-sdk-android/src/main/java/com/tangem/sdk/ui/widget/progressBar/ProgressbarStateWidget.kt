@@ -189,8 +189,9 @@ class ProgressbarStateWidget(mainView: View) : BaseSessionDelegateStateWidget(ma
         (view.drawable as? Animatable)?.start()
     }
 
-    override fun onBottomSheetDismiss() {
+    override fun onDismiss() {
         handleNoneState()
+        super.onDismiss()
     }
 
     private fun CircularProgressIndicator.applyPrimaryColor() {

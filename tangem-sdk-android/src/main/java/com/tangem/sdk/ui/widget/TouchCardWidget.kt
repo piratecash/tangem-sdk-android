@@ -150,13 +150,20 @@ class TouchCardWidget(
     }
 
     private fun stopAnimation() {
+        rippleBackgroundNfc.animate().cancel()
         rippleBackgroundNfc.stopRippleAnimation()
+        rippleBackgroundNfc.hide()
+        touchCardAnimation.tapAnimationCallback = null
+        touchCardAnimation.animatorCallback = null
         touchCardAnimation.cancel()
     }
 
-    override fun onBottomSheetDismiss() {
+    override fun onDismiss() {
         stopAnimation()
-        customBitmapHolder?.bitmap?.recycle()
+        customBitmapHolder?.bitmap?.takeUnless(Bitmap::isRecycled)?.recycle()
+        customBitmapHolder = null
+        customImageView.setImageDrawable(null)
+        super.onDismiss()
     }
 
     fun setIconScanRes(iconScanRes: Int?) {

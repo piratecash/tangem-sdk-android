@@ -22,20 +22,20 @@ class NfcReaderTest {
     }
 
     @Test
-    fun startSession_readerModeLost_restoresBeforeActivatingReading() {
-        assertReaderModeRestoredBeforeReading(reader::startSession)
+    fun startSession_readerModeEnabled_doesNotRestartReaderMode() {
+        assertReadingActivatedWithoutRestartingReaderMode(reader::startSession)
     }
 
     @Test
-    fun resumeSession_readerModeLost_restoresBeforeActivatingReading() {
-        assertReaderModeRestoredBeforeReading(reader::resumeSession)
+    fun resumeSession_readerModeEnabled_doesNotRestartReaderMode() {
+        assertReadingActivatedWithoutRestartingReaderMode(reader::resumeSession)
     }
 
-    private fun assertReaderModeRestoredBeforeReading(action: () -> Unit) {
+    private fun assertReadingActivatedWithoutRestartingReaderMode(action: () -> Unit) {
         action()
 
         assertEquals(
-            listOf(Event.ReaderModeEnabled, Event.ReadingActive),
+            listOf(Event.ReadingActive),
             listener.events,
         )
     }

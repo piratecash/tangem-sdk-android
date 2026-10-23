@@ -53,7 +53,7 @@ class JSONRPCTests {
 
         val mapFromJson = converter.toMap(json)
         val mapFromObject = converter.toMap(converter.toJson(testCard))
-        assertTrue(jsonMapVerifier(mapFromJson, mapFromObject))
+        assertTrue(jsonMapVerifier(mapFromObject, mapFromJson))
     }
 
     @Test

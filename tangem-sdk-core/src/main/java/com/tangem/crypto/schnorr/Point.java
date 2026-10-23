@@ -1,8 +1,6 @@
 package com.tangem.crypto.schnorr;
 
 
-import org.junit.Assert;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -138,7 +136,7 @@ class Point  {
     }
 
     public static boolean hasSquareY(Point P) {
-        Assert.assertFalse(isInfinite(P));
+        if (isInfinite(P)) throw new AssertionError("Point is infinite");
         return isSquare(P.getY());
     }
 
